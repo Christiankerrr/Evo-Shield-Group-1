@@ -1,0 +1,9 @@
+DATASET CSV FORMATTING PROGRAM
+v1.0 by Richard Pepe
+
+Primary purpose, split string inputs into sparse binary inputs.
+
+v1.0 is a barebones implementation. Currently no support for header files, will be added soon. 
+Lots of weird, hacky logic to clean up. Very little integrity checking, program is incredibly
+volatile. Can't guarantee how program will act against non fixed-width datasets (every row should
+have the same number of columns).

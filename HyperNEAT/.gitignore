@@ -1,0 +1,10 @@
+build
+Debug
+Release
+#out
+stage
+
+NE/HyperNEAT/NEAT/NEAT_docs/
+NE/HyperNEAT/Hypercube_NEAT/HyperNEAT_Docs/
+NE/HyperNEAT/out/data/*.xml
+NE/HyperNEAT/out/data/*.xml.gz

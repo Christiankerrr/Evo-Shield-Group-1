@@ -1,0 +1,15 @@
+# Big bundled deps we DON'T use on Linux (we use the OS package + bundled small libs)
+HyperNEAT/boost_1_86_0/
+HyperNEAT/wxWidgets-3.2.6/
+# Build artifacts / outputs (regenerated inside the image)
+**/build/
+HyperNEAT/zlib/out/
+HyperNEAT/tinyxmldll/out/
+HyperNEAT/Board/out/
+HyperNEAT/NE/HyperNEAT/out/
+**/*.orig
+# datasets uploaded / jobs run through the web UI
+HyperNEAT/NE/HyperNEAT/run/uploads/
+HyperNEAT/NE/HyperNEAT/run/jobs/
+.git/
+.DS_Store

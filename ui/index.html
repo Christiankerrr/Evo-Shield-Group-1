@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HyperNEAT IDS Studio</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --raised: #ffffff;
+  --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --seq-lo: #cde2fb; --seq-hi: #184f95;
+  --accent: #2a78d6; --accent-ink: #ffffff;
+  --good: #0ca30c; --warn: #fab219; --crit: #d03b3b;
+  --wash: rgba(42,120,214,0.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --raised: #222221;
+    --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    --seq-lo: #1c2a3d; --seq-hi: #3987e5;
+    --accent: #3987e5; --wash: rgba(57,135,229,0.12);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink);
+  font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 64px; }
+header.top { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+header.top h1 { font-size: 20px; margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+header.top p { margin: 2px 0 0; color: var(--ink-2); }
+.pill { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px;
+  border: 1px solid var(--border); border-radius: 999px; background: var(--raised); color: var(--ink-2); font-size: 13px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.dot.ok { background: var(--good); } .dot.bad { background: var(--crit); } .dot.warn { background: var(--warn); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 18px; }
+.card h2 { font-size: 15px; margin: 0 0 4px; font-weight: 650; }
+.card .sub { color: var(--ink-2); margin: 0 0 16px; }
+.step { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; align-items: center; justify-content: center;
+  background: var(--wash); color: var(--accent); font-size: 12px; font-weight: 700; margin-right: 8px; }
+.drop { border: 1.5px dashed var(--axis); border-radius: 12px; padding: 36px 20px; text-align: center; cursor: pointer;
+  transition: background .15s, border-color .15s; }
+.drop:hover, .drop.over { background: var(--wash); border-color: var(--accent); }
+.drop strong { display: block; font-size: 15px; margin-bottom: 4px; }
+.drop span { color: var(--ink-2); }
+.meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px;
+  background: var(--raised); border: 1px solid var(--border); font-size: 12.5px; color: var(--ink-2); }
+.chip b { color: var(--ink); font-weight: 600; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+@media (max-width: 860px) { .grid2 { grid-template-columns: 1fr; } }
+label.field { display: block; font-size: 12.5px; color: var(--ink-2); margin-bottom: 6px; font-weight: 550; }
+select, input[type=number] { font: inherit; color: var(--ink); background: var(--raised); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 10px; width: 100%; }
+.values { display: flex; flex-wrap: wrap; gap: 6px; max-height: 172px; overflow: auto; padding: 2px; }
+.val { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--raised); font-size: 12.5px; user-select: none; }
+.val input { margin: 0; accent-color: var(--accent); }
+.val.on { border-color: var(--accent); background: var(--wash); }
+.val small { color: var(--muted); }
+.balance { margin-top: 16px; }
+.bar { display: flex; height: 14px; border-radius: 4px; overflow: hidden; gap: 2px; background: var(--surface); }
+.bar > div { height: 100%; }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; font-size: 12.5px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.tablewrap { overflow: auto; max-height: 360px; border: 1px solid var(--border); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+th { position: sticky; top: 0; background: var(--raised); color: var(--ink-2); font-weight: 600; z-index: 1; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.dim td { color: var(--muted); }
+.badge { font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-2); }
+.badge.cat { background: var(--wash); }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.spacer { flex: 1; }
+button { font: inherit; border-radius: 8px; padding: 8px 16px; border: 1px solid var(--border); background: var(--raised);
+  color: var(--ink); cursor: pointer; }
+button:hover { background: var(--wash); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; font-weight: 600; }
+button.primary:hover { filter: brightness(1.07); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button.link { border: none; background: none; color: var(--accent); padding: 2px 4px; }
+.settings { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; align-items: end; }
+@media (max-width: 860px) { .settings { grid-template-columns: 1fr 1fr; } }
+.check { display: flex; align-items: center; gap: 8px; color: var(--ink-2); padding-bottom: 8px; }
+.note { color: var(--ink-2); font-size: 12.5px; margin-top: 12px; }
+.warnbox, .errbox { border-radius: 8px; padding: 10px 12px; margin-top: 12px; font-size: 13px; display: flex; gap: 8px; }
+.warnbox { background: rgba(250,178,25,0.12); border: 1px solid rgba(250,178,25,0.45); }
+.errbox { background: rgba(208,59,59,0.10); border: 1px solid rgba(208,59,59,0.45); }
+.tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+@media (max-width: 860px) { .tiles { grid-template-columns: 1fr 1fr; } }
+.tile { background: var(--raised); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.tile .k { color: var(--ink-2); font-size: 12.5px; }
+.tile .v { font-size: 26px; font-weight: 650; margin-top: 2px; letter-spacing: -0.01em; }
+.tile .h { color: var(--muted); font-size: 12px; }
+.progress { height: 6px; background: var(--grid); border-radius: 999px; overflow: hidden; margin: 8px 0 18px; }
+.progress > div { height: 100%; background: var(--accent); border-radius: 999px; transition: width .4s; }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart .title { font-weight: 600; margin-bottom: 2px; }
+.chart .desc { color: var(--ink-2); font-size: 12.5px; margin-bottom: 8px; }
+.tip { position: absolute; pointer-events: none; background: var(--raised); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.12); min-width: 150px; z-index: 5; }
+.tip .t { font-weight: 600; margin-bottom: 4px; }
+.tip .r { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.tip .r span { color: var(--ink-2); }
+.tip .r i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+.cm { display: grid; grid-template-columns: auto 1fr 1fr; gap: 2px; font-size: 12.5px; }
+.cm .hd { color: var(--ink-2); padding: 6px 8px; font-weight: 550; }
+.cm .cell { border-radius: 4px; padding: 16px 10px; text-align: center; }
+.cm .cell b { display: block; font-size: 20px; font-variant-numeric: tabular-nums; }
+.cm .cell span { font-size: 11.5px; opacity: .85; }
+pre.log { background: var(--raised); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; max-height: 240px;
+  overflow: auto; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink-2); margin: 10px 0 0; white-space: pre-wrap; }
+details summary { cursor: pointer; color: var(--ink-2); margin-top: 14px; }
+.hidden { display: none !important; }
+a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>HyperNEAT IDS Studio</h1>
+      <p>Drop network-traffic data, pick the label, and evolve an intrusion detector.</p>
+    </div>
+    <div class="pill" id="health"><span class="dot"></span><span>Checking trainer…</span></div>
+  </header>
+
+  <!-- 1. Data -->
+  <section class="card">
+    <h2><span class="step">1</span>Load a dataset</h2>
+    <p class="sub">A CSV with one row per connection. Header rows are detected automatically, and headerless NSL-KDD files (KDDTrain+.txt / KDDTest+.txt) get their column names filled in.</p>
+    <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose a CSV file">
+      <strong>Drop a CSV here</strong>
+      <span>or click to choose a file</span>
+      <input type="file" id="file" accept=".csv,.txt,text/csv" hidden>
+    </div>
+    <p class="note">No data handy? <button class="link" id="sampleBtn">Try the sample dataset</button> (1,500 synthetic connections, NSL-KDD style).</p>
+    <div id="dsMeta" class="meta hidden"></div>
+    <div id="dsErr"></div>
+    <details id="previewWrap" class="hidden"><summary>Preview first rows</summary>
+      <div class="tablewrap" style="margin-top:10px"><table id="preview"></table></div>
+    </details>
+  </section>
+
+  <!-- 2. Label + features -->
+  <section class="card hidden" id="configCard">
+    <h2><span class="step">2</span>Label and features</h2>
+    <p class="sub">Choose which column says whether a row is an attack, then mark the values that mean <em>benign</em>. Everything else counts as an attack.</p>
+    <div class="grid2">
+      <div>
+        <label class="field" for="labelSel">Label column</label>
+        <select id="labelSel"></select>
+        <label class="field" style="margin-top:14px">Benign values <span style="font-weight:400;color:var(--muted)">(everything unticked is an attack)</span></label>
+        <div class="values" id="labelVals"></div>
+      </div>
+      <div>
+        <label class="field">Class balance in the full file</label>
+        <div class="balance" style="margin-top:4px">
+          <div class="bar" id="balBar"></div>
+          <div class="legend" id="balLegend"></div>
+        </div>
+        <p class="note" id="labelNote"></p>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:22px">
+      <label class="field" style="margin:0">Input features</label>
+      <span class="chip" id="inputCount"></span>
+      <span class="spacer"></span>
+      <button class="link" id="selAll">Select all</button>
+      <button class="link" id="selNone">None</button>
+      <button class="link" id="selNum">Numeric only</button>
+    </div>
+    <div class="tablewrap" style="margin-top:8px">
+      <table id="featTable"></table>
+    </div>
+    <p class="note">Numeric columns are min–max scaled to 0–1. Text columns are one-hot encoded, so each distinct value becomes its own input node. Wide text columns such as <code>service</code> add a lot of inputs, which makes training slower.</p>
+    <div id="featWarn"></div>
+  </section>
+
+  <!-- 3. Train -->
+  <section class="card hidden" id="trainCard">
+    <h2><span class="step">3</span>Train</h2>
+    <p class="sub">Each generation evaluates every network in the population on the sampled rows. The first run also compiles the trainer if the C++ code changed.</p>
+    <div class="settings">
+      <div><label class="field" for="sampleRows">Sample rows</label><input type="number" id="sampleRows" value="400" min="10" step="50"></div>
+      <div><label class="field" for="population">Population size</label><input type="number" id="population" value="20" min="2" max="500"></div>
+      <div><label class="field" for="generations">Generations</label><input type="number" id="generations" value="10" min="1" max="1000"></div>
+      <label class="check"><input type="checkbox" id="balance" checked> Balance classes 50/50</label>
+    </div>
+    <div class="row" style="margin-top:16px">
+      <button class="primary" id="trainBtn">Start training</button>
+      <button id="stopBtn" class="hidden">Stop</button>
+      <span class="note" id="trainNote" style="margin:0"></span>
+    </div>
+    <div id="trainErr"></div>
+  </section>
+
+  <!-- 4. Results -->
+  <section class="card hidden" id="resultCard">
+    <div class="row">
+      <h2 style="margin:0"><span class="step">4</span>Results</h2>
+      <span class="chip" id="jobState"></span>
+      <span class="spacer"></span>
+      <span id="downloads"></span>
+    </div>
+    <div class="progress" style="margin-top:14px"><div id="prog" style="width:0%"></div></div>
+    <div class="note" id="progText" style="margin:-10px 0 16px"></div>
+
+    <div class="tiles" id="tiles"></div>
+
+    <div class="grid2">
+      <div class="chart" id="fitChart"></div>
+      <div class="chart" id="metricChart"></div>
+    </div>
+
+    <div class="grid2" style="margin-top:22px">
+      <div>
+        <div class="chart"><div class="title">Confusion matrix</div>
+          <div class="desc" id="cmDesc">The best network so far, scored on the sampled rows.</div></div>
+        <div class="cm" id="cm"></div>
+      </div>
+      <div>
+        <div class="chart"><div class="title">Training data used</div><div class="desc">What was fed to the trainer after sampling and encoding.</div></div>
+        <div class="meta" id="usedMeta" style="margin-top:0"></div>
+        <details><summary>Per-generation table</summary>
+          <div class="tablewrap" style="margin-top:8px"><table id="genTable"></table></div>
+        </details>
+        <details><summary>Trainer log</summary><pre class="log" id="log"></pre></details>
+      </div>
+    </div>
+    <div id="jobErr"></div>
+  </section>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, html) => { const e = document.createElement(tag); Object.assign(e, attrs); if (html != null) e.innerHTML = html; return e; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmt = (n, d = 1) => n == null || isNaN(n) ? '–' : Number(n).toFixed(d);
+const pct = n => n == null || isNaN(n) ? '–' : (n * 100).toFixed(1) + '%';
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+let ds = null, job = null, pollTimer = null;
+const sel = { label: null, benign: new Set(), features: new Set() };
+
+/* ---------------- health ---------------- */
+async function checkHealth() {
+  const pill = $('#health');
+  try {
+    const h = await (await fetch('/api/health')).json();
+    let cls = 'ok', txt = 'Trainer ready';
+    if (!h.docker) { cls = 'bad'; txt = 'Docker not reachable. Run "colima start" (Mac) or start Docker Desktop (Windows)'; }
+    else if (!h.container) { cls = 'warn'; txt = 'Container stopped. It starts automatically when you train'; }
+    else if (!h.binary) { cls = 'warn'; txt = 'Trainer not built yet. Run ./run-hyperneat.sh once'; }
+    pill.innerHTML = `<span class="dot ${cls}"></span><span>${txt}</span>`;
+  } catch { pill.innerHTML = '<span class="dot bad"></span><span>Server not reachable</span>'; }
+}
+
+/* ---------------- upload ---------------- */
+const drop = $('#drop'), fileIn = $('#file');
+drop.onclick = () => fileIn.click();
+drop.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileIn.click(); } };
+fileIn.onchange = () => fileIn.files[0] && upload(fileIn.files[0]);
+['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', e => e.dataTransfer.files[0] && upload(e.dataTransfer.files[0]));
+$('#sampleBtn').onclick = async () => {
+  const blob = await (await fetch('/sample_traffic.csv')).blob();
+  upload(new File([blob], 'sample_traffic.csv', { type: 'text/csv' }));
+};
+
+async function upload(file) {
+  $('#dsErr').innerHTML = '';
+  drop.querySelector('strong').textContent = `Reading ${file.name}…`;
+  try {
+    const r = await fetch('/api/datasets', { method: 'POST', body: file, headers: { 'X-Filename': file.name } });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || r.statusText);
+    ds = j;
+    drop.querySelector('strong').textContent = file.name;
+    drop.querySelector('span').textContent = 'Drop another file to replace it';
+    setupDataset();
+  } catch (e) {
+    drop.querySelector('strong').textContent = 'Drop a CSV here';
+    $('#dsErr').innerHTML = `<div class="errbox">⛔ <div>${esc(e.message)}</div></div>`;
+  }
+}
+
+function setupDataset() {
+  const numeric = ds.columns.filter(c => c.kind === 'numeric').length;
+  $('#dsMeta').innerHTML = [
+    `<span class="chip"><b>${ds.rows.toLocaleString()}</b> rows</span>`,
+    `<span class="chip"><b>${ds.columns.length}</b> columns</span>`,
+    `<span class="chip"><b>${numeric}</b> numeric · <b>${ds.columns.length - numeric}</b> text</span>`,
+    ds.nslKdd ? '<span class="chip">NSL-KDD format detected</span>' : (ds.hasHeader ? '<span class="chip">Header row detected</span>' : '<span class="chip">No header, columns auto-named</span>')
+  ].join('');
+  $('#dsMeta').classList.remove('hidden');
+  const t = $('#preview');
+  t.innerHTML = '<tr>' + ds.header.map(h => `<th>${esc(h)}</th>`).join('') + '</tr>' +
+    ds.preview.map(r => '<tr>' + r.map(c => `<td>${esc(c)}</td>`).join('') + '</tr>').join('');
+  $('#previewWrap').classList.remove('hidden');
+
+  const ls = $('#labelSel');
+  ls.innerHTML = ds.header.map(h => `<option ${h === ds.suggestedLabel ? 'selected' : ''}>${esc(h)}</option>`).join('');
+  ls.onchange = () => setLabel(ls.value, true);
+  sel.features = new Set(ds.header.filter(h => h !== ds.suggestedLabel && !ds.suggestedDrop.includes(h)));
+  setLabel(ds.suggestedLabel, false);
+  ['configCard', 'trainCard'].forEach(id => $('#' + id).classList.remove('hidden'));
+  $('#sampleRows').value = Math.min(400, ds.rows);
+}
+
+const col = name => ds.columns.find(c => c.name === name);
+
+function setLabel(name, userChange) {
+  if (userChange && sel.label) sel.features.add(sel.label);
+  sel.label = name;
+  sel.features.delete(name);
+  const c = col(name);
+  sel.benign = new Set(c.top.filter(([v]) => ds.benignWords.includes(v.trim().replace(/\.$/, '').toLowerCase())).map(([v]) => v));
+  renderLabelValues(); renderFeatures();
+}
+
+function renderLabelValues() {
+  const c = col(sel.label), box = $('#labelVals');
+  box.innerHTML = '';
+  c.top.forEach(([v, n]) => {
+    const on = sel.benign.has(v);
+    const lab = el('label', { className: 'val' + (on ? ' on' : '') },
+      `<input type="checkbox" ${on ? 'checked' : ''}> ${esc(v || '(empty)')} <small>${n.toLocaleString()}</small>`);
+    lab.querySelector('input').onchange = e => { e.target.checked ? sel.benign.add(v) : sel.benign.delete(v); renderLabelValues(); };
+    box.appendChild(lab);
+  });
+  const shown = c.top.reduce((a, [, n]) => a + n, 0);
+  const benign = c.top.filter(([v]) => sel.benign.has(v)).reduce((a, [, n]) => a + n, 0);
+  const attack = ds.rows - benign;
+  const s1 = css('--s1'), s2 = css('--s2');
+  $('#balBar').innerHTML = `<div style="width:${benign / ds.rows * 100}%;background:${s1}" title="Benign ${benign}"></div>` +
+    `<div style="width:${attack / ds.rows * 100}%;background:${s2}" title="Attack ${attack}"></div>`;
+  $('#balLegend').innerHTML = `<span><i style="background:${s1}"></i>Benign ${benign.toLocaleString()} (${pct(benign / ds.rows)})</span>` +
+    `<span><i style="background:${s2}"></i>Attack ${attack.toLocaleString()} (${pct(attack / ds.rows)})</span>`;
+  let note = c.unique > c.top.length ? `Showing the ${c.top.length} most common of ${c.uniqueCapped ? '1000+' : c.unique} values. The other ${(ds.rows - shown).toLocaleString()} rows count as attacks.` : '';
+  if (!benign) note = '⚠ No benign values selected yet. Tick at least one.';
+  else if (!attack) note = '⚠ Every row is benign. Untick something so there are attacks to detect.';
+  else if (c.unique > 20 && c.kind === 'numeric') note = '⚠ This looks like a continuous number, not a class label. Pick a different label column.';
+  $('#labelNote').textContent = note;
+  updateTrainReady();
+}
+
+function inputsFor(c) { return c.kind === 'numeric' ? (c.min === c.max ? 0 : 1) : (c.unique > 1 ? c.unique : 0); }
+
+function renderFeatures() {
+  const t = $('#featTable');
+  t.innerHTML = '<tr><th></th><th>Column</th><th>Type</th><th class="num">Distinct</th><th>Values</th><th class="num">Inputs</th></tr>';
+  ds.columns.forEach(c => {
+    const isLabel = c.name === sel.label, on = sel.features.has(c.name);
+    const summary = c.kind === 'numeric'
+      ? `${fmt(c.min, c.min % 1 ? 2 : 0)} → ${fmt(c.max, c.max % 1 ? 2 : 0)}`
+      : c.top.slice(0, 4).map(([v]) => esc(v)).join(', ') + (c.unique > 4 ? ', …' : '');
+    const tr = el('tr', { className: on || isLabel ? '' : 'dim' },
+      `<td>${isLabel ? '' : `<input type="checkbox" ${on ? 'checked' : ''} aria-label="Use ${esc(c.name)}">`}</td>
+       <td>${esc(c.name)} ${isLabel ? '<span class="badge">label</span>' : ''}</td>
+       <td><span class="badge ${c.kind === 'categorical' ? 'cat' : ''}">${c.kind === 'numeric' ? 'number' : 'text'}</span></td>
+       <td class="num">${c.uniqueCapped ? '1000+' : c.unique.toLocaleString()}</td>
+       <td style="max-width:320px;overflow:hidden;text-overflow:ellipsis">${summary}${inputsFor(c) === 0 && !isLabel ? ' <span class="badge">constant</span>' : ''}</td>
+       <td class="num">${isLabel ? '' : inputsFor(c)}</td>`);
+    const cb = tr.querySelector('input');
+    if (cb) cb.onchange = e => { e.target.checked ? sel.features.add(c.name) : sel.features.delete(c.name); renderFeatures(); };
+    t.appendChild(tr);
+  });
+  const inputs = [...sel.features].reduce((a, f) => a + inputsFor(col(f)), 0);
+  $('#inputCount').innerHTML = `<b>${sel.features.size}</b> columns → about <b>${inputs}</b> input nodes`;
+  $('#featWarn').innerHTML = inputs > 150
+    ? `<div class="warnbox">⚠ <div>${inputs} inputs will train slowly under emulation, because each network has 200 hidden nodes wired to every input. Unticking wide text columns speeds it up a lot.</div></div>` : '';
+  updateTrainReady();
+}
+$('#selAll').onclick = () => { sel.features = new Set(ds.header.filter(h => h !== sel.label)); renderFeatures(); };
+$('#selNone').onclick = () => { sel.features.clear(); renderFeatures(); };
+$('#selNum').onclick = () => { sel.features = new Set(ds.columns.filter(c => c.kind === 'numeric' && c.name !== sel.label).map(c => c.name)); renderFeatures(); };
+
+function updateTrainReady() {
+  const busy = job && ['queued', 'building', 'training'].includes(job.state);
+  const c = ds && col(sel.label);
+  const benign = c ? c.top.filter(([v]) => sel.benign.has(v)).reduce((a, [, n]) => a + n, 0) : 0;
+  const ok = ds && sel.features.size && benign > 0 && benign < ds.rows;
+  $('#trainBtn').disabled = !ok || busy;
+  $('#trainNote').textContent = busy ? 'Training in progress…' : (!ok && ds ? 'Pick a label with both classes and at least one feature.' : '');
+}
+
+/* ---------------- training ---------------- */
+$('#trainBtn').onclick = async () => {
+  $('#trainErr').innerHTML = '';
+  const body = {
+    datasetId: ds.id, label: sel.label, benignValues: [...sel.benign], features: [...sel.features],
+    sampleRows: +$('#sampleRows').value, population: +$('#population').value,
+    generations: +$('#generations').value, balance: $('#balance').checked, seed: Date.now() % 100000
+  };
+  try {
+    const r = await fetch('/api/train', { method: 'POST', body: JSON.stringify(body) });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || r.statusText);
+    job = j; $('#resultCard').classList.remove('hidden'); renderJob();
+    $('#resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    poll();
+  } catch (e) { $('#trainErr').innerHTML = `<div class="errbox">⛔ <div>${esc(e.message)}</div></div>`; }
+};
+$('#stopBtn').onclick = async () => { if (job) { await fetch(`/api/jobs/${job.id}/stop`, { method: 'POST' }); } };
+
+function poll() {
+  clearTimeout(pollTimer);
+  pollTimer = setTimeout(async () => {
+    try { job = await (await fetch(`/api/jobs/${job.id}`)).json(); renderJob(); } catch {}
+    if (['queued', 'building', 'training'].includes(job.state)) poll(); else checkHealth();
+  }, 1000);
+}
+
+function metrics(b) {
+  if (!b) return {};
+  const { tp, tn, fp, fn } = b, n = tp + tn + fp + fn;
+  return { acc: n ? (tp + tn) / n : NaN, det: tp + fn ? tp / (tp + fn) : NaN, fpr: fp + tn ? fp / (fp + tn) : NaN,
+           prec: tp + fp ? tp / (tp + fp) : NaN, fit: b.fit };
+}
+
+function renderJob() {
+  const gens = job.generations, cfg = job.config, busy = ['queued', 'building', 'training'].includes(job.state);
+  const stateTxt = { queued: 'Queued', building: 'Compiling trainer', training: 'Training', done: 'Finished', stopped: 'Stopped', error: 'Error' }[job.state];
+  const dotCls = { done: 'ok', error: 'bad', stopped: 'warn' }[job.state] || '';
+  $('#jobState').innerHTML = `<span class="dot ${dotCls}"></span> ${stateTxt}`;
+  $('#stopBtn').classList.toggle('hidden', !busy);
+  updateTrainReady();
+
+  const doneGens = gens.length + (job.state === 'training' ? job.current.evaluated / cfg.population : 0);
+  $('#prog').style.width = Math.min(100, (job.state === 'done' ? 1 : doneGens / cfg.generations) * 100) + '%';
+  $('#progText').textContent = job.state === 'training'
+    ? `Generation ${Math.min(gens.length + 1, cfg.generations)} of ${cfg.generations}: ${job.current.evaluated} of ${cfg.population} networks evaluated`
+    : job.state === 'building' ? 'Checking whether the C++ trainer needs recompiling (first run can take ~10 min under emulation)…'
+    : job.state === 'done' ? `${gens.length} generations · ${Math.round((job.finishedAt - job.startedAt))}s` : job.phase;
+
+  // champion = best individual over all generations
+  let champ = null, champGen = null;
+  gens.forEach(g => { if (!champ || g.best.fit > champ.fit) { champ = g.best; champGen = g.gen; } });
+  const m = metrics(champ);
+  const tile = (k, v, h) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="h">${h}</div></div>`;
+  $('#tiles').innerHTML =
+    tile('Best fitness', champ ? fmt(m.fit) : '–', champ ? `generation ${champGen}, out of 100` : 'waiting for the first generation') +
+    tile('Accuracy', pct(m.acc), 'rows classified correctly') +
+    tile('Detection rate', pct(m.det), 'attacks caught (recall)') +
+    tile('False positive rate', pct(m.fpr), 'benign rows flagged');
+
+  lineChart($('#fitChart'), {
+    title: 'Fitness per generation', desc: 'Fitness = (accuracy + detection rate) ÷ 2 × 100',
+    x: gens.map(g => g.gen), yMax: 100, yFmt: v => fmt(v, 0), tipFmt: v => fmt(v, 1),
+    series: [
+      { name: 'Best', color: '--s1', values: gens.map(g => g.best.fit) },
+      { name: 'Population avg', color: '--s2', values: gens.map(g => g.avg) }]
+  });
+  lineChart($('#metricChart'), {
+    title: 'Best network per generation', desc: 'How that generation\'s top network scores',
+    x: gens.map(g => g.gen), yMax: 1, yFmt: v => (v * 100).toFixed(0) + '%', tipFmt: pct,
+    series: [
+      { name: 'Accuracy', color: '--s1', values: gens.map(g => metrics(g.best).acc) },
+      { name: 'Detection', color: '--s2', values: gens.map(g => metrics(g.best).det) },
+      { name: 'False pos.', color: '--s3', values: gens.map(g => metrics(g.best).fpr) }]
+  });
+  renderCM(champ, champGen);
+
+  const s = job.summary;
+  $('#usedMeta').innerHTML = `<span class="chip"><b>${s.rows}</b> rows</span><span class="chip"><b>${s.benign}</b> benign · <b>${s.attack}</b> attack</span>` +
+    `<span class="chip"><b>${s.inputs}</b> input nodes</span><span class="chip">pop <b>${cfg.population}</b> × <b>${cfg.generations}</b> gens</span>` +
+    (s.dropped.length ? `<span class="chip">dropped constant: ${esc(s.dropped.join(', '))}</span>` : '');
+  $('#genTable').innerHTML = '<tr><th class="num">Gen</th><th class="num">Best fit</th><th class="num">Avg fit</th><th class="num">Accuracy</th><th class="num">Detection</th><th class="num">False pos.</th><th class="num">TP / TN / FP / FN</th></tr>' +
+    gens.map(g => { const q = metrics(g.best); return `<tr><td class="num">${g.gen}</td><td class="num">${fmt(g.best.fit)}</td><td class="num">${fmt(g.avg)}</td><td class="num">${pct(q.acc)}</td><td class="num">${pct(q.det)}</td><td class="num">${pct(q.fpr)}</td><td class="num">${g.best.tp} / ${g.best.tn} / ${g.best.fp} / ${g.best.fn}</td></tr>`; }).join('');
+  const logEl = $('#log'), atBottom = logEl.scrollTop + logEl.clientHeight >= logEl.scrollHeight - 8;
+  logEl.textContent = job.log.join('\n');
+  if (atBottom) logEl.scrollTop = logEl.scrollHeight;
+  $('#downloads').innerHTML = job.hasOutput
+    ? `<a href="/api/jobs/${job.id}/output.xml">output.xml</a> · <a href="/api/jobs/${job.id}/subset.csv">prepared CSV</a> · <a href="/api/jobs/${job.id}/trainer.log">log</a>`
+    : `<a href="/api/jobs/${job.id}/subset.csv">prepared CSV</a>`;
+  $('#jobErr').innerHTML = job.error ? `<div class="errbox">⛔ <div>${esc(job.error)}</div></div>` : '';
+}
+
+function renderCM(b, gen) {
+  const box = $('#cm');
+  if (!b) { box.innerHTML = '<div class="note">Appears after the first generation.</div>'; return; }
+  $('#cmDesc').textContent = `Best network (generation ${gen}), scored on the ${b.tp + b.tn + b.fp + b.fn} sampled rows.`;
+  const mix = (a, c, t) => { // blend two hex colors
+    const p = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)); const A = p(a), C = p(c);
+    return '#' + A.map((v, i) => Math.round(v + (C[i] - v) * t).toString(16).padStart(2, '0')).join('');
+  };
+  const lo = css('--seq-lo'), hi = css('--seq-hi');
+  const cell = (n, rowTotal, lbl) => {
+    const t = rowTotal ? n / rowTotal : 0, bg = mix(lo, hi, t);
+    const lightText = t > 0.5 || matchMedia('(prefers-color-scheme: dark)').matches;
+    return `<div class="cell" style="background:${bg};color:${lightText ? '#fff' : '#0b0b0b'}" title="${lbl}: ${n} (${pct(t)} of row)"><b>${n}</b><span>${lbl} · ${pct(t)}</span></div>`;
+  };
+  const att = b.tp + b.fn, ben = b.fp + b.tn;
+  box.innerHTML = `<div></div><div class="hd">Predicted attack</div><div class="hd">Predicted benign</div>
+    <div class="hd">Actual attack</div>${cell(b.tp, att, 'caught')}${cell(b.fn, att, 'missed')}
+    <div class="hd">Actual benign</div>${cell(b.fp, ben, 'false alarm')}${cell(b.tn, ben, 'passed')}`;
+}
+
+/* ---------------- line chart (SVG, hover crosshair + tooltip) ---------------- */
+function lineChart(host, o) {
+  const W = 520, H = 270, m = { l: 40, r: 92, t: 12, b: 40 };
+  const iw = W - m.l - m.r, ih = H - m.t - m.b, n = o.x.length;
+  const xs = i => m.l + (n <= 1 ? iw / 2 : i / (n - 1) * iw);
+  const ys = v => m.t + ih - (v / o.yMax) * ih;
+  const ink2 = css('--ink-2'), muted = css('--muted'), grid = css('--grid'), axis = css('--axis'), surf = css('--surface');
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.title)}">`;
+  for (let k = 0; k <= 4; k++) {
+    const v = o.yMax * k / 4, y = ys(v);
+    svg += `<line x1="${m.l}" x2="${m.l + iw}" y1="${y}" y2="${y}" stroke="${k ? grid : axis}" stroke-width="1"/>`;
+    svg += `<text x="${m.l - 8}" y="${y + 4}" text-anchor="end" font-size="11" fill="${muted}" style="font-variant-numeric:tabular-nums">${o.yFmt(v)}</text>`;
+  }
+  const step = Math.max(1, Math.ceil(n / 8));
+  o.x.forEach((x, i) => { if (i % step === 0 || i === n - 1) svg += `<text x="${xs(i)}" y="${m.t + ih + 16}" text-anchor="middle" font-size="11" fill="${muted}">${x}</text>`; });
+  svg += `<text x="${m.l + iw / 2}" y="${H - 4}" text-anchor="middle" font-size="11" fill="${muted}">generation</text>`;
+  // direct end labels, nudged apart
+  const ends = [];
+  o.series.forEach(s => {
+    const c = css(s.color), pts = s.values.map((v, i) => [xs(i), ys(isNaN(v) ? 0 : v)]);
+    if (pts.length > 1) svg += `<polyline points="${pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    if (pts.length) { const p = pts[pts.length - 1];
+      svg += `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${c}" stroke="${surf}" stroke-width="2"/>`;
+      ends.push({ y: p[1], name: s.name, v: s.values[s.values.length - 1], c }); }
+  });
+  ends.sort((a, b) => a.y - b.y).forEach((e, i, arr) => { if (i && e.y - arr[i - 1].y < 14) e.y = arr[i - 1].y + 14; });
+  ends.forEach(e => svg += `<text x="${m.l + iw + 10}" y="${e.y + 4}" font-size="11.5" fill="${ink2}">${esc(e.name)} ${o.tipFmt(e.v)}</text>`);
+  if (!n) svg += `<text x="${m.l + iw / 2}" y="${m.t + ih / 2}" text-anchor="middle" font-size="12" fill="${muted}">Waiting for the first generation…</text>`;
+  svg += `<line class="xh" y1="${m.t}" y2="${m.t + ih}" stroke="${axis}" stroke-width="1" visibility="hidden"/>`;
+  svg += `<rect class="hit" x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/></svg>`;
+  const legend = o.series.map(s => `<span><i style="background:${css(s.color)}"></i>${esc(s.name)}</span>`).join('');
+  host.innerHTML = `<div class="title">${esc(o.title)}</div><div class="desc">${esc(o.desc)}</div><div class="legend" style="margin:0 0 6px">${legend}</div>${svg}<div class="tip hidden"></div>`;
+  if (!n) return;
+  const s = host.querySelector('svg'), xh = s.querySelector('.xh'), tip = host.querySelector('.tip');
+  s.querySelector('.hit').addEventListener('mousemove', ev => {
+    const r = s.getBoundingClientRect(), px = (ev.clientX - r.left) / r.width * W;
+    const i = Math.max(0, Math.min(n - 1, Math.round(n <= 1 ? 0 : (px - m.l) / iw * (n - 1))));
+    xh.setAttribute('x1', xs(i)); xh.setAttribute('x2', xs(i)); xh.setAttribute('visibility', 'visible');
+    tip.innerHTML = `<div class="t">Generation ${o.x[i]}</div>` + o.series.map(se =>
+      `<div class="r"><span><i style="background:${css(se.color)}"></i>${esc(se.name)}</span><b>${o.tipFmt(se.values[i])}</b></div>`).join('');
+    tip.classList.remove('hidden');
+    const hostR = host.getBoundingClientRect(), left = xs(i) / W * r.width + (r.left - hostR.left);
+    tip.style.left = Math.min(left + 12, hostR.width - tip.offsetWidth) + 'px';
+    tip.style.top = (r.top - hostR.top + 10) + 'px';
+  });
+  s.querySelector('.hit').addEventListener('mouseleave', () => { xh.setAttribute('visibility', 'hidden'); tip.classList.add('hidden'); });
+}
+
+checkHealth();
+// reopen the most recent job (survives a page refresh while the server is running)
+fetch('/api/jobs/latest').then(r => r.ok ? r.json() : null).then(j => {
+  if (!j) return;
+  job = j; $('#resultCard').classList.remove('hidden'); renderJob();
+  if (['queued', 'building', 'training'].includes(job.state)) poll();
+});
+</script>
+</body>
+</html>

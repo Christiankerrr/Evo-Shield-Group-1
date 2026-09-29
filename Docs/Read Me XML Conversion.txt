@@ -1,0 +1,29 @@
+Approach 1: Excel with Dynamically Expand Multiple Nested Tables Using Recursion & Extract Data from XML using Power Query
+
+Data
+Get Data
+From File
+From XML
+(Select File)
+Transform Data
+(Edit tables)
+Close & Load
+
+Table 1: Genetics
+
+Tab First Row as Header >> Use Header as first row
+Transpose
+Adjust table titles accordingly
+
+Table 2: Individual w/ Gen Info
+
+Drill Down to Gen Table
+
+On Indvidual Recursed Table >> Expand
+Select Desired Attributes
+Drag and Drop Table Columns as needed
+Adjust as needed
+
+Note: Change Type of Each Column to decimal or int depending
+
+https://youtu.be/_DWgI9wDXn8?feature=shared

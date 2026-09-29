@@ -1,0 +1,109 @@
+These are build instructions for a system running Windows 11 x64 and Visual Studio 17 2022.
+Some libraries may build out of box on alternative setups, but HyperNEAT won't.
+
+It might be best to make a copy of the HyperNEAT file outside of your GitHub folder to mess around with, but the .gitignore does
+remove all unwanted build, out, and stage folders, meaning you can build the version in your repo too.
+
+My copy is hosted at "C:\HyperNEAT".
+
+
+
+
+Before you start:
+
+Download:
+
+	CMake GUI
+	https://github.com/Kitware/CMake/releases/download/v3.30.5/cmake-3.30.5-windows-x86_64.msi
+	
+	Python313
+	(Make sure you do custom installation and only install 3.13, NOT 3.12.  Installing both will introduce conflicts.)
+	https://www.python.org/ftp/python/3.13.0/python-3.13.0-amd64.exe
+
+	
+
+
+Open the environment variables editor window:
+
+	Create a new system variable:
+		PYTHON
+		The path to your python 13.3 file.  Mine is just:
+	
+		C:\Python313
+
+	Edit the Path system variable:
+	Add a new entry with the path to the wxWidgets library file.  Mine is:
+	
+		C:\HyperNEAT\wxWidgets-3.2.6\lib\vc14x_x64_dll
+
+You're ready to start building.
+
+
+
+
+1. Build the boost_1_86_0 library (this is the only build that will not use CMake)
+
+        i. Open Visual Studio and click "continue without code"
+       ii. Go to Tools -> Command Line -> Developer Command Prompt
+      iii. Navigate to the boost root directory (on my computer it's "C:\HyperNEAT\boost_1_86_0")
+              - i.e. enter "cd C:\HyperNEAT_built\boost_1_86_0"
+       iv. Type "bootstrap", press enter.
+        v. Type ".\b2", press enter.
+       vi. This will take a few minutes.
+      vii. You're done building boost!
+
+2. Build the Board library
+
+        i. Open the CMake GUI
+       ii. Click browse source and select the Board root directory (i.e. "C:\HyperNEAT\Board")
+      iii. Click browse build, create a build folder, and select it (i.e. "C:\HyperNEAT\Board\build")
+       iv. Click Configure
+        v. Under "specify the generator" choose Visual Studio 17 2022.  Select Use default native compilers.
+       vi. Click Finish.
+      vii. The entries should be red.  Click Configure again.  They should no longer be red.
+     viii. Click Generate.
+       ix. Click Open Project.  It should open Visual Studio.
+        x. Select the Debug build with x64 configuration and build ALL_BUILD
+       xi. Select the Release build with x64 configuration and build ALL_BUILD
+      xii. You're done building Board!
+
+3. Build the JGTL library
+
+        i. Repeat steps i-xi from 2 for "C:\HyperNEAT\JGTL".
+       ii. You're done building JGTL!
+
+4. Build the zlib library
+
+        i. Repeat steps i-xi from 2 for "C:\HyperNEAT\zlib".
+       ii. You're done building zlib!
+
+5. Build the tinyxml library
+
+        i. Repeat steps i-xi from 2 for "C:\HyperNEAT\tinyxmldll".
+       ii. You're done building tinyxmldll!
+
+6. Build the fuego library
+
+        i. Repeat steps i-xi from 2 for "C:\HyperNEAT\fuego-0.4". (note: the build will take a while)
+       ii. You're done building fuego!
+
+7. Build HyperNEAT
+
+        i. Repeat steps i-xi from 2 for "C:\HyperNEAT\NE\HyperNEAT".
+       ii. You're done building HyperNEAT!
+
+8. Run HyperNEAT:
+
+        i. In Visual Studio, in the Solution Explorer panel, right click the Hypercube_NEAT entry.
+       ii. Click "Set as Startup Project".
+      iii. Click "Start Without Debugging" (the play button) or press Ctrl+F5
+       iv. The HyperNEAT GUI should now pop up!
+
+For instructions on running experiments in HyperNEAT, take a look at the manual ("C:\HyperNEAT\doc\manual.pdf")
+
+
+If you have any problems, I'll try to help out!
+
+Happy building!
+Megan Krajewski.
+
