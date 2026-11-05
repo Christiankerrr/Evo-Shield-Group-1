@@ -103,7 +103,7 @@ Open **http://127.0.0.1:8765** in your browser (on Windows, any Windows browser 
 2. **Pick the label.** Choose the label column and tick the values that mean *benign* (for
    example `normal`). Everything else counts as an attack. A bar shows the class balance.
 3. **Pick features.** Choose which columns to use. The table shows each column's type, range and
-   how many input nodes it adds. Text columns are one-hot encoded and numbers are scaled to 0–1
+   how many input nodes it adds. Text columns are one-hot encoded and numbers are scaled to −1…1
    automatically.
 4. **Train.** Set the sample size, population size and number of generations, then press
    **Start training**.
@@ -175,22 +175,32 @@ docker exec hn bash -lc 'cd /work/HyperNEAT/NE/HyperNEAT/build && make -j4'
 
 ---
 
-## Known issue: the model doesn't learn yet
+## How fitness works
 
-The pipeline runs end to end, but on current settings the best network usually flags **every**
-row as an attack (about 50% accuracy, 100% detection, 100% false positives, fitness 75). Two
-things cause this:
+Fitness is **balanced accuracy**: `(detection rate + true-negative rate) / 2 × 100`. A network
+that gives the same answer for every row scores exactly 50, so evolution only gets credit for
+actually telling attacks from benign traffic. The label column's value `0` marks attacks; IDS
+Studio sets this up automatically.
 
-1. **Saturated output.** The output node sums 200 hidden nodes whose weights are close to ±1, so
-   it ends up on the same side for almost every input.
-2. **The fitness formula.** Fitness is `(accuracy + detection rate) / 2`. That gives "flag
-   everything" a score of 75 on balanced data, and evolution gets stuck there. Using balanced
-   accuracy, `(detection rate + true-negative rate) / 2`, would score that strategy 50.
+Example run on real NSL-KDD data (`KDDTrain+.txt` with `service` unticked: 400 balanced rows,
+39 inputs, population 20, 10 generations, about 30 seconds): the best network reached fitness
+90, with 90% accuracy, 85% of attacks detected and 5% false positives.
 
-Other ways to improve this: scale down the hidden-to-output weights, bring back HyperNEAT's
-weight threshold (commented out in `populateSubstrate`), or use fewer hidden nodes than the fixed
-200. IDS Studio's confusion matrix and per-generation metrics are the quickest way to see
-whether a change helps.
+**Limitation:** these scores are measured on the same rows the networks were evolved on. There is
+no held-out test set yet, so they show how well networks fit the training sample, not how well
+they would catch new attacks. The proposal's train/validation/test splits address this.
+
+### Why it didn't learn at first
+
+Early runs ended with the best network flagging every row as an attack. Three changes fixed that:
+
+1. **Fitness formula.** The original `(accuracy + detection rate) / 2` gave "flag everything" 75
+   out of 100 on balanced data, and evolution got stuck there.
+2. **Zero-centred inputs.** Inputs scaled to 0–1 were all positive, so most hidden nodes
+   responded the same way to every row. IDS Studio now scales to −1…1. The biggest single
+   improvement came from this change.
+3. **Fan-in weight scaling.** Substrate weights are divided by √(number of incoming links) so the
+   output node, which sums 200 hidden nodes, doesn't saturate.
 
 ---
 
@@ -210,8 +220,12 @@ These are already applied in this repo.
 5. Fixed the `NORMALIZE` option (a syntax error and a divide-by-zero) and turned it on. This
    scales CPPN coordinates to [-1, 1].
 6. Added one `EVAL tp=… tn=… fp=… fn=… fit=…` log line per evaluation for IDS Studio.
+7. Switched fitness to balanced accuracy (see "How fitness works").
+8. Scaled substrate weights by fan-in: `weight = CPPN output × 3 / √(incoming links)`.
+9. `isString()` now accepts negative numbers and Windows line endings. Before, any row containing
+   either was silently skipped.
 
-The C++ changes (3–6) are commented in
+The C++ changes (3–9) are commented in
 `HyperNEAT/NE/HyperNEAT/Hypercube_NEAT/src/Experiments/HCUBE_AIDSExploitExperiment.cpp`.
 
 ## Native Windows build (Visual Studio, original method)

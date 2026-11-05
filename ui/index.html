@@ -181,7 +181,7 @@ a { color: var(--accent); }
     <div class="tablewrap" style="margin-top:8px">
       <table id="featTable"></table>
     </div>
-    <p class="note">Numeric columns are min–max scaled to 0–1. Text columns are one-hot encoded, so each distinct value becomes its own input node. Wide text columns such as <code>service</code> add a lot of inputs, which makes training slower.</p>
+    <p class="note">Numeric columns are min–max scaled to −1…1. Text columns are one-hot encoded, so each distinct value becomes its own input node. Wide text columns such as <code>service</code> add a lot of inputs, which makes training slower.</p>
     <div id="featWarn"></div>
   </section>
 
@@ -455,7 +455,7 @@ function renderJob() {
     tile('False positive rate', pct(m.fpr), 'benign rows flagged');
 
   lineChart($('#fitChart'), {
-    title: 'Fitness per generation', desc: 'Fitness = (accuracy + detection rate) ÷ 2 × 100',
+    title: 'Fitness per generation', desc: 'Balanced accuracy: (detection rate + true-negative rate) ÷ 2 × 100',
     x: gens.map(g => g.gen), yMax: 100, yFmt: v => fmt(v, 0), tipFmt: v => fmt(v, 1),
     series: [
       { name: 'Best', color: '--s1', values: gens.map(g => g.best.fit) },

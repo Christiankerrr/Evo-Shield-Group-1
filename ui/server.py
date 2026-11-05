@@ -209,8 +209,9 @@ def prepare(ds, cfg):
             if enc[0] == "num":
                 _, j, lo, hi = enc
                 x = float(r[j]) if r[j] else 0.0
-                # min-max to [0,1]: the trainer rejects '-' and 'e' as "strings"
-                cells.append("%.6f" % ((x - lo) / (hi - lo)))
+                # min-max to [-1,1]: zero-centred inputs keep hidden nodes from all
+                # responding the same way. Fixed-point format: the trainer rejects 'e'.
+                cells.append("%.6f" % (2.0 * (x - lo) / (hi - lo) - 1.0))
             else:
                 _, j, cats = enc
                 cells.extend("1" if r[j] == c else "0" for c in cats)
