@@ -125,6 +125,7 @@ enum ExperimentType
     EXPERIMENT_AIDSEXPLOREEXPERIMENT = 1,                                   //1
     EXPERIMENT_AIDSBALANCEDEXPERIMENT = 2,                                  //2
     EXPERIMENT_XOR = 3,                                                     //3
+    EXPERIMENT_ES =4,                                                       //4
     EXPERIMENT_END
 };
 

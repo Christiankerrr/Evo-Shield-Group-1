@@ -197,6 +197,7 @@ ENDIF(CYGWIN)
 
 INCLUDE_DIRECTORIES(
 	include
+	include/ES
 	../NEAT/include
 	${TINYXMLDLL_INCLUDE}
 	${BOOST_ROOT}
@@ -328,7 +329,13 @@ ADD_LIBRARY(
 	src/Experiments/HCUBE_AIDSExploreExperiment.cpp
 	src/Experiments/HCUBE_AIDSBalancedExperiment.cpp
 	src/Experiments/HCUBE_AIDSCommon.cpp
+	src/Experiments/HCUBE_ESExperiment.cpp
 
+	src/ES/substrate.cpp
+	src/ES/exportUtils.cpp
+	src/ES/esLinkExplorer.cpp
+	src/ES/esNodeExplorer.cpp
+	src/ES/cppn.cpp
 	
 	include/HCUBE_Boost.h
 	include/HCUBE_Defines.h
@@ -351,6 +358,13 @@ ADD_LIBRARY(
 	include/Experiments/HCUBE_AIDSExploreExperiment.h
 	include/Experiments/HCUBE_AIDSBalancedExperiment.h
 	include/Experiments/HCUBE_AIDSCommon.h
+	include/Experiments/HCUBE_ESExperiment.h
+
+	include/ES/substrate.h
+	include/ES/esNodeExplorer.h
+	include/ES/esLinkExplorer.h
+	include/ES/exportUtils.h
+	include/ES/cppn.h
 	)
 
 use_precompiled_header(

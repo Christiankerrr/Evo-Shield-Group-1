@@ -8,6 +8,7 @@
 #include "Experiments/HCUBE_AIDSExploitExperiment.h"
 #include "Experiments/HCUBE_AIDSExploreExperiment.h"
 #include "Experiments/HCUBE_AIDSBalancedExperiment.h"
+#include "Experiments/HCUBE_ESExperiment.h"
 
 
 #ifndef HCUBE_NOGUI
@@ -59,6 +60,9 @@ namespace HCUBE
                 break;
             case EXPERIMENT_XOR:
                 experiments.push_back(boost::shared_ptr<Experiment>(new XorExperiment("", a)));
+                break;
+            case EXPERIMENT_ES:
+                experiments.push_back(boost::shared_ptr<Experiment>(new ESExperiment("", a)));
                 break;
             default:
                 cout << string("ERROR: Unknown Experiment Type!\n");
